@@ -9,6 +9,7 @@ Consolite.Assembler = function(assemblyCode) {
     this._labels = {};
     this._labelRefs = [];
     this._byteLength = 0;
+    this._bytesOutputTotal = 0;
     this._opcodes = {
         'NOP':   0x00,
         'INPUT': 0x01,
@@ -294,11 +295,83 @@ Consolite.Assembler.prototype = {
             throw errors;
         }
     },
+    _writeOutput: function(str) {
+        for (var i = 0; i < str.length; i++) {
+            this._output[this._bytesOutputTotal] = str.charCodeAt(i);
+            this._bytesOutputTotal++;
+        }
+    },
     _secondPass: function() {
-        var errors = [];
-        // TODO: fill in here
-        if (0 < errors.length) {
-            throw errors;
+        this._output = new Uint8Array(this._byteLength);
+        for (var i = 0; i < this._tokenLines.length; i++) {
+            var tokens = this._tokenLines[i];
+            // For the second pass we only care about lines starting
+            // with an opcode or data
+            switch (tokens[0].type) {
+            case 'opcode':
+                var opcode = tokens[0].data;
+                var bytesOutput = 0;
+                for (var j = 0; j < tokens.length; j++) {
+                    switch (tokens[j].type) {
+                    case 'opcode':
+                        var opcodeValue = this._opcodes[tokens[j].data];
+                        this._writeOutput(String.fromCharCode(opcodeValue));
+                        bytesOutput++;
+                        break;
+                    case 'register':
+                        var registerValue = this._registers[tokens[j].data];
+                        this._writeOutput(String.fromCharCode(registerValue));
+                        bytesOutput++;
+                        break;
+                    case 'data':
+                        // The RET instruction has only 1 byte of data following
+                        // it. All other instructions with data have 2 bytes,
+                        // and must be padded if they are using only one.
+                        if ('RET' === opcode) {
+                            bytesOutput++;
+                        } else {
+                            bytesOutput += 2;
+                            if (1 === tokens[j].data.length) {
+                                this._writeOutput(String.fromCharCode(0));
+                            }
+                        }
+                        this._writeOutput(tokens[j].data);
+                        break;
+                    case 'labelref':
+                        bytesOutput += 2;
+                        var address = this._labels[tokens[j].data];
+                        var addressStr = '';
+                        addressStr += String.fromCharCode((address >> 8) & 0xff);
+                        addressStr += String.fromCharCode(address & 0xff);
+                        this._writeOutput(addressStr);
+                        break;
+                    case 'labeldecl':
+                    case 'unknown':
+                    default:
+                        break;
+                    }
+                }
+                // Output any padding bytes necessary
+                while (bytesOutput < 4) {
+                    this._writeOutput(String.fromCharCode(0));
+                    bytesOutput++;
+                }
+                break;
+            case 'data':
+                // Directly output all data, in big endian order
+                var dataSize = 0;
+                for (var j = 0; j < tokens.length; j++) {
+                    this._writeOutput(tokens[j].data);
+                    dataSize += tokens[j].data.length;
+                }
+                // Make sure to pad the data to a multiple of 4 bytes,
+                // so that any instructions that follow are aligned properly.
+                while (0 !== dataSize % 4) {
+                    this._writeOutput(String.fromCharCode(0));
+                    dataSize++;
+                }
+                break;
+            }
         }
     },
     getBinary: function() {
