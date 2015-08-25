@@ -39,7 +39,7 @@ Consolite.Emulator = function(binary, keymap, canvasId) {
     this._running = false;
 
     // Initialize time since last call to TIMERST
-    this._timeSinceRst = (new Date()).getTime();
+    this._timeSinceRst = Date.now();
 
     // Set up map of human readable identifier to opcode
     this._opcodes = {
@@ -423,10 +423,10 @@ Consolite.Emulator.prototype = {
             this._mainMem[argB+1] = dest & 0xff;
             break;
         case this._opcodes.TIME:
-            this._registers[reg1] = (new Date()).getTime() - this._timeSinceRst;
+            this._registers[reg1] = Date.now() - this._timeSinceRst;
             break;
         case this._opcodes.TIMERST:
-            this._timeSinceRst = (new Date()).getTime();
+            this._timeSinceRst = Date.now();
             break;
         case this._opcodes.RND:
             this._registers[reg1] = Math.floor(Math.random() * (1 << 16));
@@ -526,14 +526,35 @@ Consolite.Emulator.prototype = {
             return;
         }
 
-        // Execute a bunch of instructions at once, then
-        // wait so that other JavaScript events can squeeze in.
-        for (var i = 0; i < 50000; i++) {
-            this._executeNext();
-        }
+        // Use intervals of 10 milliseconds between calls to this
+        // function (usually the browser minimum, and we don't need
+        // more granularity than that).
+        var interval = 10;
+        var timeLimit = Date.now() + interval;
 
+        // The setTimeout function uses the global context so
+        // we won't be able to access 'this' next time we go through
+        // this function unless we make a closure. We call setTimeout
+        // at the start of the function so that this function can
+        // be scheduled to run  again almost immediately after this
+        // instance exits.
         var that = this;
-        setTimeout(function() { that._runAtIntervals() }, 10);
+        setTimeout(function() { that._runAtIntervals() }, interval);
+
+        // Keep executing until the allotted time is up. Check
+        // every 100 instructions to see if we are at or past
+        // the time limit.
+        var instCounter = 0;
+        while (true) {
+            this._executeNext();
+            instCounter++;
+            if (100 === instCounter) {
+                instCounter = 0;
+                if (timeLimit <= Date.now()) {
+                    break;
+                }
+            }
+        }
     },
     run: function() {
         this._canvas.focus();
