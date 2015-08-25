@@ -1,3 +1,8 @@
+/**
+ * Port of the Consolite Assembler in JavaScript
+ * Copyright (c) 2015 Robert Fotino, All Rights Reserved
+ */
+
 if (typeof Consolite === 'undefined') {
     Consolite = {};
 }
