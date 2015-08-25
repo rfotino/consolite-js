@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Consolite.js</title>
+    <script type="text/javascript" src="assembler.js"></script>
+    <script type="text/javascript" src="emulator.js"></script>
+    <script type="text/javascript">
+      var emu;
+      function halt() {
+        emu.halt();
+      }
+      function assemble() {
+        if (emu && emu.halt) {
+          emu.halt();
+        }
+        var textarea = document.getElementById('assembly');
+        var errorDiv = document.getElementById('errors');
+        var asm = new Consolite.Assembler(textarea.value);
+        var bin;
+        try {
+          bin = asm.getBinary();
+        } catch (errors) {
+          errorDiv.innerHTML = errors.map(function(a) {
+            return '<p>'+a+'</p>';
+          }).join('\n');
+          errorDiv.style.display = '';
+          return false;
+        }
+        errorDiv.style.display = 'none';
+        var keymap = [
+          { keyCode: Consolite.Emulator.Keys.SPACE, inputId: 0 },
+          { keyCode: Consolite.Emulator.Keys.LEFT, inputId: 1 },
+          { keyCode: Consolite.Emulator.Keys.RIGHT, inputId: 2 }
+        ];
+        emu = new Consolite.Emulator(bin, keymap, 'emulator-display');
+        emu.run();
+        return false;
+      }
+    </script>
+    <style type="text/css">
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        max-width: 768px;
+        margin: 0 auto;
+        padding: 0;
+      }
+      h1 {
+        margin: 10px 0;
+      }
+
+      #assembly {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        resize: vertical;
+        margin-bottom: 5px;
+      }
+
+      #assemble-btn {
+        padding: 5px;
+        margin-right: 5px;
+      }
+
+      #errors {
+        margin: 10px 0;
+        padding: 15px;
+        border: 1px solid #ebccd1;
+        border-radius: 5px;
+        background: #f2dede;
+        color: #a94442;
+        font-family: monospace;
+      }
+
+      #emulator-display {
+        background: #000;
+        display: block;
+        margin: 15px auto;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Consolite.js Assembler and Emulator Demo</h1>
+    <div id="errors" style="display: none;"></div>
+    <form onsubmit="return assemble()">
+      <textarea id="assembly" rows="20" cols="80">; Put code here</textarea>
+      <input id="assemble-btn" type="submit" value="Assemble and Run" />
+      <a id="halt" href="javascript:halt();">Halt</a>
+    </form>
+    <canvas id="emulator-display" width="768" height="576" tabindex="1"></canvas>
+  </body>
+</html>
