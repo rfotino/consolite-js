@@ -229,12 +229,6 @@ Consolite.Emulator.prototype = {
             }
         }
     },
-    _keyDownListener: function(e) {
-        this.sendKeyEvent(e.keyCode, true);
-    },
-    _keyUpListener: function(e) {
-        this.sendKeyEvent(e.keyCode, false);
-    },
     _getInput: function(inputId) {
         if (inputId in this._keyState) {
             return this._keyState[inputId];
