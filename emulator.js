@@ -300,15 +300,15 @@ Consolite.Emulator.prototype = {
         this._ctx.fillRect(rectX, rectY, rectW, rectH);
     },
     _executeNext: function() {
-        var inst = this._mainMem.subarray(this._instructionPointer,
-                                          this._instructionPointer + 4);
-        var opcode = inst[0];
-        var arg1 = inst[1];
-        var arg2 = inst[2];
+        var opcode = this._mainMem[this._instructionPointer];
+        var arg1 = this._mainMem[this._instructionPointer + 1];
+        var arg2 = this._mainMem[this._instructionPointer + 2];
         var reg1 = arg1 & 0xf;
         var reg2 = arg2 & 0xf;
-        var argA = (inst[1] << 8) | inst[2];
-        var argB = (inst[2] << 8) | inst[3];
+        var argA = (this._mainMem[this._instructionPointer + 1] << 8) |
+                   this._mainMem[this._instructionPointer + 2];
+        var argB = (this._mainMem[this._instructionPointer + 2] << 8) |
+                   this._mainMem[this._instructionPointer + 3];
 
         var dest = this._registers[reg1];
         var src = this._registers[reg2];
