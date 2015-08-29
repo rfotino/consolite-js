@@ -20,9 +20,11 @@ Consolite.Emulator = function(binary, keymap, canvasId) {
     var that = this;
     this._canvas.addEventListener('keydown', function(e) {
         that.sendKeyEvent(e.keyCode, true);
+        e.preventDefault();
     });
     this._canvas.addEventListener('keyup', function(e) {
         that.sendKeyEvent(e.keyCode, false);
+        e.preventDefault();
     });
     this._keymap = keymap;
     this._keyState = [];
