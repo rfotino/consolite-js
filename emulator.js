@@ -368,7 +368,12 @@ Consolite.Emulator.prototype = {
             break;
         case this._opcodes.DIV:
             this._registers[reg1] /= src;
-            result = Math.floor(dest / src);
+            // Check for divide by zero, in that case set to all ones.
+            if (0 === src) {
+                result = 0xffff;
+            } else {
+                result = Math.floor(dest / src);
+            }
             clearFlags = false;
             break;
         case this._opcodes.AND:
