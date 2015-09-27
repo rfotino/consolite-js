@@ -329,7 +329,8 @@ Consolite.Emulator.prototype = {
             nextInstPtr = argA;
             break;
         case this._opcodes.RET:
-            nextInstPtr = this._pop() + arg1 + 4;
+            nextInstPtr = this._pop() + 4;
+            this._registers[REG_SP] -= arg1;
             break;
         case this._opcodes.LOAD:
             this._registers[reg1] =
