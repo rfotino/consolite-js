@@ -284,6 +284,9 @@ Consolite.Emulator.prototype = {
         this._signFlag = !!(0x8000 & result);
     },
     _setPixel: function(x, y) {
+        // Truncate x and y to 8 bits
+        x &= 0xff;
+        y &= 0xff;
         // Unpack the RGB value from the color register
         var red = this._colorRegister & 0xe0;
         var green = (this._colorRegister & 0x1c) << 3;
@@ -330,7 +333,7 @@ Consolite.Emulator.prototype = {
             break;
         case this._opcodes.RET:
             nextInstPtr = this._pop() + 4;
-            this._registers[REG_SP] -= arg1;
+            this._registers[0] -= arg1;
             break;
         case this._opcodes.LOAD:
             this._registers[reg1] =
