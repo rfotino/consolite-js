@@ -42,7 +42,3 @@ You can find a more complete example in `demo.html`.
   }
 </script>
 ```
-
-## Copyright
-
-Copyright (c) 2015 Robert Fotino, All Rights Reserved
